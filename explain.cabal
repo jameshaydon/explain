@@ -1,0 +1,184 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           explain
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/jameshaydon/explain#readme>
+homepage:       https://github.com/jameshaydon/explain#readme
+bug-reports:    https://github.com/jameshaydon/explain/issues
+author:         James Henri Haydon
+maintainer:     james.haydon@gmail.com.com
+copyright:      2021 James Haydon
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/jameshaydon/explain
+
+library
+  exposed-modules:
+      Control.Monad.Explain
+  other-modules:
+      Paths_explain
+  hs-source-dirs:
+      src
+  default-extensions:
+      BangPatterns
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DeriveDataTypeable
+      DeriveFoldable
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      MultiParamTypeClasses
+      MultiWayIf
+      NamedFieldPuns
+      LambdaCase
+      OverloadedLabels
+      OverloadedStrings
+      PatternSynonyms
+      PolyKinds
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      ViewPatterns
+      QuantifiedConstraints
+      EmptyDataDeriving
+      EmptyCase
+  ghc-options: -hiedir=.hie -fwrite-ide-info -fhide-source-paths -freverse-errors -Weverything -Werror -Wno-implicit-prelude -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , mtl
+    , text
+  default-language: Haskell2010
+
+executable explain-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_explain
+  hs-source-dirs:
+      app
+  default-extensions:
+      BangPatterns
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DeriveDataTypeable
+      DeriveFoldable
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      MultiParamTypeClasses
+      MultiWayIf
+      NamedFieldPuns
+      LambdaCase
+      OverloadedLabels
+      OverloadedStrings
+      PatternSynonyms
+      PolyKinds
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      ViewPatterns
+      QuantifiedConstraints
+      EmptyDataDeriving
+      EmptyCase
+  ghc-options: -hiedir=.hie -fwrite-ide-info -fhide-source-paths -freverse-errors -Weverything -Werror -Wno-implicit-prelude -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , explain
+    , mtl
+    , text
+  default-language: Haskell2010
+
+test-suite explain-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_explain
+  hs-source-dirs:
+      test
+  default-extensions:
+      BangPatterns
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DeriveDataTypeable
+      DeriveFoldable
+      DeriveFunctor
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      MultiParamTypeClasses
+      MultiWayIf
+      NamedFieldPuns
+      LambdaCase
+      OverloadedLabels
+      OverloadedStrings
+      PatternSynonyms
+      PolyKinds
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      ViewPatterns
+      QuantifiedConstraints
+      EmptyDataDeriving
+      EmptyCase
+  ghc-options: -hiedir=.hie -fwrite-ide-info -fhide-source-paths -freverse-errors -Weverything -Werror -Wno-implicit-prelude -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , explain
+    , mtl
+    , text
+  default-language: Haskell2010
