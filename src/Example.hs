@@ -115,20 +115,20 @@ isAuthorOf :: User -> Post -> App ()
 isAuthorOf user post =
   guarded
     (author post == username user)
-    (Custom (Pos (Is (ThUser (username user)) (ThOf (ThThe ThAuthor) (ThPost (postID post))))))
+    (Custom (Pos (ThUser (username user) `Is` (ThThe ThAuthor `ThOf` ThPost (postID post)))))
     ()
 
 postGroup :: PostID -> App GroupID
 postGroup postID = do
   post <- getPost postID
-  success (Custom (Pos (Is (ThOf (ThThe (ThGroup Nothing)) (ThPost postID)) (ThGroup (Just (group post)))))) (group post) -- Of (ThPost postID) (ThGroup (group post))
+  success (Custom (Pos (ThThe (ThGroup Nothing) `ThOf` ThPost postID `Is` ThGroup (Just (group post))))) (group post) -- Of (ThPost postID) (ThGroup (group post))
 
 isGroupModerator :: Username -> GroupID -> App ()
 isGroupModerator username groupID = do
   group <- getGroup groupID
   guarded
     (username `elem` moderators group)
-    (Custom (Pos (Is (ThUser username) (ThOf (ThThe ThModerator) (ThGroup (Just groupID))))))
+    (Custom (Pos (ThUser username `Is` (ThThe ThModerator `ThOf` ThGroup (Just groupID)))))
     ()
 
 moderatesGroupOfPost :: User -> PostID -> App ()
@@ -140,7 +140,7 @@ hasPerm :: User -> Perm -> App ()
 hasPerm user perm =
   guarded
     (perm `elem` perms user)
-    (Custom (Pos (Has (ThUser (username user)) (ThPerm perm))))
+    (Custom (Pos (ThUser (username user) `Has` ThPerm perm)))
     ()
 
 canEditPost :: Username -> PostID -> App ()
