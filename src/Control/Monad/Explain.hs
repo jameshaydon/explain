@@ -16,6 +16,7 @@ import Prettyprinter
 class Explanation e where
   plainly :: e
   paralleled :: e -> e -> e
+  alternate :: e -> e -> e
   sequenced :: e -> e -> e
 
 class Dualistic e where
@@ -24,6 +25,7 @@ class Dualistic e where
 instance Explanation Text where
   plainly = ""
   paralleled x y = x <> ", " <> y
+  alternate x y = x <> "||" <> y
   sequenced x y = x <> "; " <> y
 
 instance Dualistic Text where
@@ -84,7 +86,7 @@ instance (Explanation e, Applicative f) => Alternative (ExplainT e f) where
     where
       az = go <$> ax <*> ay
       go x_ y_ = case (x_, y_) of
-        ((e, Nothing), (e', Nothing)) -> (paralleled e e', Nothing)
+        ((e, Nothing), (e', Nothing)) -> (alternate e e', Nothing)
         ((e, Just x), (e', Just _)) -> (paralleled e e', Just x)
         ((e, Just x), _) -> (e, Just x)
         (_, (e, Just y)) -> (e, Just y)
@@ -178,6 +180,7 @@ instance Dualistic (Dual e) where
 data Expl cust
   = EPlain
   | EPar [Expl cust]
+  | EAlt [Expl cust]
   | ESeq [Expl cust]
   | ENeg (Expl cust)
   | Custom cust
@@ -192,6 +195,7 @@ instance Dualistic (Expl e) where
 instance Explanation (Expl cust) where
   plainly = EPlain
   paralleled x y = EPar [x, y]
+  alternate x y = EAlt [x, y]
   sequenced x y = ESeq [x, y]
 
 instance Plated (Expl cust) where
@@ -199,6 +203,7 @@ instance Plated (Expl cust) where
   plate f = \case
     EPar es -> EPar <$> traverse f es
     ESeq es -> ESeq <$> traverse f es
+    EAlt es -> EAlt <$> traverse f es
     ENeg e -> ENeg <$> f e
     e -> pure e
 
@@ -206,6 +211,7 @@ instance Pretty cust => Pretty (Expl cust) where
   pretty = \case
     EPlain -> mempty
     EPar es -> bullets (pretty <$> es)
+    EAlt es -> "Alternatives" <> colon <+> bullets (pretty <$> es)
     ESeq es -> bulletItems " " "∴" (pretty <$> es)
     ENeg e -> "Not" <> colon <+> pretty e
     Custom cust -> pretty cust
@@ -255,17 +261,22 @@ optimizeExplWith f = fixPoint 100 (deduplicate . optimize)
     squash = \case
       EPar es -> EPar $ concatMap (\case EPar es' -> es'; e -> [e]) es
       ESeq es -> ESeq $ concatMap (\case ESeq es' -> es'; e -> [e]) es
+      EAlt es -> EAlt $ concatMap (\case EAlt es' -> es'; e -> [e]) es
       ENeg (ENeg e) -> e
       ENeg (EPar es) -> EPar (ENeg <$> es)
+      ENeg (EAlt es) -> EAlt (ENeg <$> es)
       ENeg (Custom e) -> Custom (negated e)
       e -> e
     shrink :: Expl a -> Expl a
     shrink = \case
       EPar [] -> EPlain
       ESeq [] -> EPlain
+      EAlt [] -> EPlain
       EPar [e] -> e
       ESeq [e] -> e
+      EAlt [e] -> e
       EPar es -> EPar $ filter hasInner es
+      EAlt es -> EAlt $ filter hasInner es
       ESeq es -> ESeq $ filter hasInner es
       e -> e
       where
@@ -273,6 +284,7 @@ optimizeExplWith f = fixPoint 100 (deduplicate . optimize)
           EPlain -> False
           EPar [] -> False
           ESeq [] -> False
+          EAlt [] -> False
           _ -> True
 
 fixPoint :: (Eq a) => Int -> (a -> a) -> (a -> a)

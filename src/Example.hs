@@ -145,16 +145,12 @@ hasPerm user perm =
     (Custom (Pos (HasPerm (username user) perm)))
     ()
 
--- A user may edit a post if:
---  - They are the author; or,
---  - They are a moderator of the group; or,
---  - They are an admin.
 canEditPost :: Username -> PostID -> App ()
 canEditPost username postID = do
   user <- getUser username
   post <- getPost postID
   (user `hasPerm` Edit)
-    >> ( user `isAuthorOf` post
+    *> ( user `isAuthorOf` post
            <|> user `moderatesGroupOfPost` postID
            <|> user `hasPerm` Admin
        )
@@ -170,7 +166,7 @@ db =
           [ ( "james",
               User
                 { username = "james",
-                  perms = [Edit]
+                  perms = []
                 }
             )
           ],
