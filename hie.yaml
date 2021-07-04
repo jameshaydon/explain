@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:explain"
+
+    - path: "app/Main.hs"
+      component: "explain:exe:explain-exe"
+
+    - path: "app/Paths_explain.hs"
+      component: "explain:exe:explain-exe"
+
+    - path: "test"
+      component: "explain:test:explain-test"
