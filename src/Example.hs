@@ -45,32 +45,30 @@ data Post = Post
     content :: Text
   }
 
-data Fact
-  = IsAuthor Username PostID
-  | IsModerator Username GroupID
-  | HasPerm Username Perm
-  | NoPostWithID PostID
-  | NoUserWithUsername Username
-  | NoGroupWithID GroupID
-  | PostOfGroup PostID GroupID
+data Thing
+  = ThUser Username
+  | ThPost PostID
+  | ThGroup (Maybe GroupID)
+  | ThPerm Perm
+  | ThAuthor
+  | ThModerator
+  | ThThe Thing
+  | ThA Thing
+  | ThOf Thing Thing
   deriving stock (Eq, Ord, Show)
 
-instance Pretty (Dual Fact) where
+instance Pretty Thing where
   pretty = \case
-    Pos (IsAuthor u p) -> squotes (pretty u) <+> "authored post" <+> squotes (pretty p)
-    Neg (IsAuthor u p) -> squotes (pretty u) <+> "isn't the author of post" <+> squotes (pretty p)
-    Pos (IsModerator u g) -> squotes (pretty u) <+> "moderates" <+> squotes (pretty g)
-    Neg (IsModerator u g) -> squotes (pretty u) <+> "isn't a moderator of" <+> squotes (pretty g)
-    Pos (HasPerm u p) -> squotes (pretty u) <+> "has" <+> pretty p <+> "access"
-    Neg (HasPerm u p) -> squotes (pretty u) <+> "does not have" <+> pretty p <+> "access"
-    Pos (NoPostWithID i) -> "There is no post with ID" <> colon <+> squotes (pretty i)
-    Neg (NoPostWithID i) -> "Post" <+> squotes (pretty i) <+> "exists"
-    Pos (NoUserWithUsername u) -> "No user with username" <> colon <+> squotes (pretty u)
-    Neg (NoUserWithUsername u) -> "User" <+> squotes (pretty u) <+> "exists"
-    Pos (NoGroupWithID g) -> "No group with ID" <> colon <+> squotes (pretty g)
-    Neg (NoGroupWithID g) -> "group" <+> squotes (pretty g) <+> "exists"
-    Pos (PostOfGroup p g) -> "Post" <+> squotes (pretty p) <+> "belongs to group" <+> squotes (pretty g)
-    Neg (PostOfGroup p g) -> "Post" <+> squotes (pretty p) <+> "does not belong to group" <+> squotes (pretty g)
+    ThUser u -> "user" <+> squotes (pretty u)
+    ThPost p -> "post" <+> squotes (pretty p)
+    ThGroup Nothing -> "group"
+    ThGroup (Just g) -> "group" <+> squotes (pretty g)
+    ThPerm p -> pretty p <+> "access"
+    ThAuthor -> "author"
+    ThModerator -> "moderator"
+    ThThe t -> "the" <+> pretty t
+    ThA t -> "a" <+> pretty t
+    ThOf x y -> pretty x <+> "of" <+> pretty y
 
 data DB = DB
   { users :: Map Username User,
@@ -78,17 +76,17 @@ data DB = DB
     groups :: Map GroupID Group
   }
 
-newtype App a = App {unApp :: ReaderT DB (ExplainT (Expl (Dual Fact)) Identity) a}
+newtype App a = App {unApp :: ReaderT DB (ExplainT (Expl (Dual (Fact Thing))) Identity) a}
   deriving newtype
     ( Functor,
       Applicative,
       Alternative,
       Monad,
       MonadReader DB,
-      MonadExplain (Expl (Dual Fact))
+      MonadExplain (Expl (Dual (Fact Thing)))
     )
 
-runApp :: App a -> (Expl (Dual Fact), Maybe a)
+runApp :: App a -> (Expl (Dual (Fact Thing)), Maybe a)
 runApp = first optimizeExpl . runIdentity . runExplainT . flip runReaderT db . unApp
 
 runAppIO :: (Show a) => App a -> IO ()
@@ -97,40 +95,40 @@ runAppIO x = do
   print (pretty e)
   print res
 
-getThing :: (Ord thingID) => (DB -> Map thingID thing) -> (thingID -> Fact) -> thingID -> App thing
+getThing :: (Ord thingID) => (DB -> Map thingID thing) -> (thingID -> Dual (Fact Thing)) -> thingID -> App thing
 getThing things eNoThing thingID = do
   thing_ <- asks (Map.lookup thingID . things)
   case thing_ of
-    Nothing -> failure (Custom (Pos (eNoThing thingID)))
+    Nothing -> failure (Custom (eNoThing thingID))
     Just thing -> pure thing
 
 getPost :: PostID -> App Post
-getPost = getThing posts NoPostWithID
+getPost = getThing posts (Neg . Exists . ThPost)
 
 getGroup :: PostID -> App Group
-getGroup = getThing groups NoGroupWithID
+getGroup = getThing groups (Neg . Exists . ThGroup . Just)
 
 getUser :: Username -> App User
-getUser = getThing users NoUserWithUsername
+getUser = getThing users (Neg . Exists . ThUser)
 
 isAuthorOf :: User -> Post -> App ()
 isAuthorOf user post =
   guarded
     (author post == username user)
-    (Custom (Pos (IsAuthor (username user) (postID post))))
+    (Custom (Pos (Is (ThUser (username user)) (ThOf (ThThe ThAuthor) (ThPost (postID post))))))
     ()
 
 postGroup :: PostID -> App GroupID
 postGroup postID = do
   post <- getPost postID
-  success (Custom (Pos (PostOfGroup postID (group post)))) (group post)
+  success (Custom (Pos (Is (ThOf (ThThe (ThGroup Nothing)) (ThPost postID)) (ThGroup (Just (group post)))))) (group post) -- Of (ThPost postID) (ThGroup (group post))
 
 isGroupModerator :: Username -> GroupID -> App ()
 isGroupModerator username groupID = do
   group <- getGroup groupID
   guarded
     (username `elem` moderators group)
-    (Custom (Pos (IsModerator username groupID)))
+    (Custom (Pos (Is (ThUser username) (ThOf (ThThe ThModerator) (ThGroup (Just groupID))))))
     ()
 
 moderatesGroupOfPost :: User -> PostID -> App ()
@@ -142,7 +140,7 @@ hasPerm :: User -> Perm -> App ()
 hasPerm user perm =
   guarded
     (perm `elem` perms user)
-    (Custom (Pos (HasPerm (username user) perm)))
+    (Custom (Pos (Has (ThUser (username user)) (ThPerm perm))))
     ()
 
 canEditPost :: Username -> PostID -> App ()
@@ -166,7 +164,7 @@ db =
           [ ( "james",
               User
                 { username = "james",
-                  perms = []
+                  perms = [Edit]
                 }
             )
           ],

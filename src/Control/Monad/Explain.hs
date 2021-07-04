@@ -163,10 +163,10 @@ enot x = withExplanation x $ \(e, res) -> case res of
   Just _ -> failure e
 
 guarded :: (Dualistic e, MonadExplain e m) => Bool -> e -> a -> m a
-guarded cond e tt  =
+guarded cond e tt =
   if cond
-  then success e tt
-  else failure (negated e)
+    then success e tt
+    else failure (negated e)
 
 -- * An explanation type
 
@@ -293,3 +293,23 @@ fixPoint bound f x =
   if x == f x
     then x
     else fixPoint (bound - 1) f (f x)
+
+-- Facts
+
+data Fact thing
+  = Is thing thing
+  | Belong thing thing
+  | Has thing thing
+  | Exists thing
+  deriving stock (Eq, Ord, Show)
+
+instance (Pretty thing) => Pretty (Dual (Fact thing)) where
+  pretty = \case
+    Pos (Is x y) -> pretty x <+> "is" <+> pretty y
+    Neg (Is x y) -> pretty x <+> "isn't" <+> pretty y
+    Pos (Belong x y) -> pretty x <+> "belongs to" <+> pretty y
+    Neg (Belong x y) -> pretty x <+> "doesn't belong to" <+> pretty y
+    Pos (Has x y) -> pretty x <+> "has" <+> pretty y
+    Neg (Has x y) -> pretty x <+> "doesn't have" <+> pretty y
+    Pos (Exists x) -> pretty x <+> "exists"
+    Neg (Exists x) -> pretty x <+> "does not exist"
